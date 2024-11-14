@@ -108,7 +108,7 @@ namespace Internal
 
   template <typename U, typename T>
   auto jsonSerVal(std::ostream &st, std::unordered_map<U, T> v, int lvl)
-    -> std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>>
+    -> std::enable_if_t<std::is_integral_v<U> || std::is_enum_v<U>>
   {
     st << "{\n";
     auto first = true;
@@ -129,7 +129,7 @@ namespace Internal
 
   template <typename U, typename T>
   auto jsonSerVal(std::ostream &st, std::map<U, T> v, int lvl)
-    -> std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>>
+    -> std::enable_if_t<std::is_integral_v<U> || std::is_enum_v<U>>
   {
     st << "{\n";
     auto first = true;
@@ -230,7 +230,7 @@ namespace Internal
 
   template <typename U, typename T>
   auto jsonDeserVal(const json::Val &j, std::unordered_map<U, T> &v)
-    -> std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>>
+    -> std::enable_if_t<std::is_integral_v<U> || std::is_enum_v<U>>
   {
     if (!j.isObj())
       return;
@@ -247,7 +247,7 @@ namespace Internal
 
   template <typename U, typename T>
   auto jsonDeserVal(const json::Val &j, std::map<U, T> &v)
-    -> std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>>
+    -> std::enable_if_t<std::is_integral_v<U> || std::is_enum_v<U>>
   {
     if (!j.isObj())
       return;
