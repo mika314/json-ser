@@ -30,7 +30,7 @@ namespace Internal
       st << " ";
   }
 
-  auto jsonSerVal(std::ostream &st, std::string v, int /*lvl*/) -> void
+  auto jsonSerVal(std::ostream &st, const std::string &v, int /*lvl*/) -> void
   {
     jsonEsc(st, std::move(v));
   }

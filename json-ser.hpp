@@ -8,7 +8,7 @@
 #include <sstream>
 
 template <typename T>
-constexpr auto jsonSer(std::ostream &st, T v, int lvl = 0) -> void;
+constexpr auto jsonSer(std::ostream &st, T &&v, int lvl = 0) -> void;
 
 template <typename T>
 auto jsonDeser(const json::Val &jv, T &v) -> void;
@@ -28,17 +28,17 @@ namespace Internal
   auto jsonEsc(std::ostream &, std::string) -> void;
   auto indent(std::ostream &, int lvl) -> void;
 
-  auto jsonSerVal(std::ostream &st, std::string v, int /*lvl*/) -> void;
+  auto jsonSerVal(std::ostream &st, const std::string &v, int /*lvl*/) -> void;
 
   template <typename T>
-  auto jsonSerVal(std::ostream &st, T v, int /*lvl*/)
+  auto jsonSerVal(std::ostream &st, T &&v, int /*lvl*/)
     -> std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>>
   {
-    st << v;
+    st << std::forward<T>(v);
   }
 
   template <typename T>
-  auto jsonSerVal(std::ostream &st, std::vector<T> v, int lvl) -> void
+  auto jsonSerVal(std::ostream &st, const std::vector<T> &v, int lvl) -> void
   {
     st << "[\n";
     auto first = true;
@@ -59,13 +59,13 @@ namespace Internal
   auto jsonSerVal(std::ostream &st, bool v, int /*lvl*/) -> void;
 
   template <typename... Ts>
-  auto jsonSerVal(std::ostream &st, std::variant<Ts...> v, int lvl) -> void
+  auto jsonSerVal(std::ostream &st, const std::variant<Ts...> &v, int lvl) -> void
   {
     std::visit([&](auto vv) { jsonSer(st, std::move(vv), lvl); }, v);
   }
 
   template <typename T>
-  auto jsonSerVal(std::ostream &st, std::unordered_map<std::string, T> v, int lvl) -> void
+  auto jsonSerVal(std::ostream &st, const std::unordered_map<std::string, T> &v, int lvl) -> void
   {
     st << "{\n";
     auto first = true;
@@ -86,7 +86,7 @@ namespace Internal
   }
 
   template <typename T>
-  auto jsonSerVal(std::ostream &st, std::map<std::string, T> v, int lvl) -> void
+  auto jsonSerVal(std::ostream &st, const std::map<std::string, T> &v, int lvl) -> void
   {
     st << "{\n";
     auto first = true;
@@ -107,7 +107,7 @@ namespace Internal
   }
 
   template <typename U, typename T>
-  auto jsonSerVal(std::ostream &st, std::unordered_map<U, T> v, int lvl)
+  auto jsonSerVal(std::ostream &st, const std::unordered_map<U, T> &v, int lvl)
     -> std::enable_if_t<std::is_integral_v<U> || std::is_enum_v<U>>
   {
     st << "{\n";
@@ -128,7 +128,7 @@ namespace Internal
   }
 
   template <typename U, typename T>
-  auto jsonSerVal(std::ostream &st, std::map<U, T> v, int lvl)
+  auto jsonSerVal(std::ostream &st, const std::map<U, T> &v, int lvl)
     -> std::enable_if_t<std::is_integral_v<U> || std::is_enum_v<U>>
   {
     st << "{\n";
@@ -284,9 +284,10 @@ namespace Internal
 } // namespace Internal
 
 template <typename T>
-constexpr auto jsonSer(std::ostream &st, T v, int lvl) -> void
+constexpr auto jsonSer(std::ostream &st, T &&v, int lvl) -> void
 {
-  if constexpr (IsSerializableClassV<T>)
+  using DecayedT = std::remove_cvref_t<T>;
+  if constexpr (IsSerializableClassV<DecayedT>)
   {
     // object (JSON object)
     st << "{\n";
@@ -319,7 +320,7 @@ constexpr auto jsonSer(std::ostream &st, T v, int lvl) -> void
     st << "}";
   }
   else
-    Internal::jsonSerVal(st, std::move(v), lvl);
+    Internal::jsonSerVal(st, std::forward<T>(v), lvl);
 }
 
 template <typename T>
