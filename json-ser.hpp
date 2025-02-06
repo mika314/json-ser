@@ -267,6 +267,8 @@ namespace Internal
   template <typename T>
   auto jsonDeserVal(const json::Val &j, std::optional<T> &v) -> void
   {
+    if (j.isNull())
+      return;
     auto &vv = v.emplace();
     jsonDeser(j, vv);
   }
