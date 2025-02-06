@@ -1,9 +1,10 @@
-// (c) 2024 Mika Pi
+// (c) 2024-2025 Mika Pi
 
 #pragma once
 #include <iostream>
 #include <json/json.hpp>
 #include <map>
+#include <optional>
 #include <ser/is_serializable.hpp>
 #include <sstream>
 
@@ -263,7 +264,12 @@ namespace Internal
   }
 
   // null
-  // optional
+  template <typename T>
+  auto jsonDeserVal(const json::Val &j, std::optional<T> &v) -> void
+  {
+    auto &vv = v.emplace();
+    jsonDeser(j, vv);
+  }
 
   struct JsonArch
   {
@@ -338,7 +344,6 @@ auto jsonDeser(const json::Val &jv, T &v) -> void
 template <typename T>
 auto jsonDeser(std::istream &st, T &v) -> bool
 {
-  static_assert(IsSerializableClassV<T>);
   auto root = json::Root{st};
   if (root.empty())
     return false;
