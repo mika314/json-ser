@@ -7,6 +7,7 @@
 #include <optional>
 #include <ser/is_serializable.hpp>
 #include <sstream>
+#include <unordered_set>
 
 template <typename T>
 constexpr auto jsonSer(std::ostream &st, T &&v, int lvl = 0) -> void;
@@ -40,6 +41,25 @@ namespace Internal
 
   template <typename T>
   auto jsonSerVal(std::ostream &st, const std::vector<T> &v, int lvl) -> void
+  {
+    st << "[\n";
+    auto first = true;
+    for (auto &&e : v)
+    {
+      if (first)
+        first = false;
+      else
+        st << ",\n";
+      indent(st, lvl + 1);
+      jsonSer(st, std::move(e), lvl + 1);
+    }
+    st << "\n";
+    indent(st, lvl);
+    st << "]";
+  }
+
+  template <typename T>
+  auto jsonSerVal(std::ostream &st, const std::unordered_set<T> &v, int lvl) -> void
   {
     st << "[\n";
     auto first = true;
@@ -185,6 +205,21 @@ namespace Internal
     v.clear();
     for (const auto &e : arr)
       jsonDeser(e, v.emplace_back());
+  }
+
+  template <typename T>
+  auto jsonDeserVal(const json::Val &j, std::unordered_set<T> &v) -> void
+  {
+    if (!j.isArr())
+      return;
+    const auto &arr = j.asArr();
+    v.clear();
+    for (const auto &e : arr)
+    {
+      T itm;
+      jsonDeser(e, itm);
+      v.emplace(std::move(itm));
+    }
   }
 
   auto jsonDeserVal(const json::Val &j, bool &v) -> void;
