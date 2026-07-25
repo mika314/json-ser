@@ -86,6 +86,14 @@ namespace Internal
   }
 
   template <typename T>
+  auto jsonSerVal(std::ostream &st, const std::optional<T> &v, int lvl) -> void
+  {
+    if (!v)
+      return;
+    jsonSer(st, std::move(*v), lvl);
+  }
+
+  template <typename T>
   auto jsonSerVal(std::ostream &st, const std::unordered_map<std::string, T> &v, int lvl) -> void
   {
     st << "{\n";
