@@ -1,4 +1,4 @@
-// (c) 2024-2025 Mika Pi
+// (c) 2024-2026 Mika Pi
 
 #pragma once
 #include <iostream>
@@ -24,6 +24,16 @@ namespace Internal
 
   template <typename... Args>
   struct IsVariant<std::variant<Args...>> : std::true_type
+  {
+  };
+
+  template <typename T>
+  struct IsOptional : std::false_type
+  {
+  };
+
+  template <typename T>
+  struct IsOptional<std::optional<T>> : std::true_type
   {
   };
 
@@ -89,8 +99,9 @@ namespace Internal
   auto jsonSerVal(std::ostream &st, const std::optional<T> &v, int lvl) -> void
   {
     if (!v)
-      return;
-    jsonSer(st, std::move(*v), lvl);
+      st << "null";
+    else
+      jsonSer(st, std::move(*v), lvl);
   }
 
   template <typename T>
@@ -344,6 +355,9 @@ constexpr auto jsonSer(std::ostream &st, T &&v, int lvl) -> void
     st << "{\n";
     auto first = true;
     auto l = [&](const char *name, auto vv) mutable {
+      if constexpr (Internal::IsOptional<decltype(vv)>::value)
+        if (!vv)
+          return;
       if constexpr (Internal::IsVariant<decltype(vv)>::value)
       {
         if (first)
