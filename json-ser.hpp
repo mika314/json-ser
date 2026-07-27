@@ -44,9 +44,15 @@ namespace Internal
 
   template <typename T>
   auto jsonSerVal(std::ostream &st, T &&v, int /*lvl*/)
-    -> std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>>
+    -> std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>
   {
     st << std::forward<T>(v);
+  }
+
+  template <typename T>
+  auto jsonSerVal(std::ostream &st, T &&v, int /*lvl*/) -> std::enable_if_t<std::is_enum_v<T>>
+  {
+    st << static_cast<int>(std::forward<T>(v));
   }
 
   template <typename T>
@@ -207,12 +213,13 @@ namespace Internal
       v = j.asInt64();
       return;
     }
-    if constexpr (std::is_enum_v<T>)
+    else if constexpr (std::is_enum_v<T>)
     {
       v = static_cast<T>(j.asUInt64());
       return;
     }
-    v = j.asDouble();
+    else
+      v = j.asDouble();
   }
 
   template <typename T>
