@@ -42,11 +42,26 @@ namespace Internal
 
   auto jsonSerVal(std::ostream &st, const std::string &v, int /*lvl*/) -> void;
 
+  inline auto toNum(auto v)
+  {
+    return v;
+  }
+
+  inline auto toNum(char v)
+  {
+    return static_cast<int>(v);
+  }
+
+  inline auto toNum(unsigned char v)
+  {
+    return static_cast<unsigned>(v);
+  }
+
   template <typename T>
   auto jsonSerVal(std::ostream &st, T &&v, int /*lvl*/)
     -> std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>
   {
-    st << std::forward<T>(v);
+    st << toNum(std::forward<T>(v));
   }
 
   template <typename T>
@@ -165,7 +180,7 @@ namespace Internal
       else
         st << ",\n";
       indent(st, lvl + 1);
-      st << "\"" << e.first << "\": ";
+      st << "\"" << toNum(e.first) << "\": ";
       jsonSer(st, std::move(e.second), lvl + 1);
     }
     st << "\n";
@@ -186,7 +201,7 @@ namespace Internal
       else
         st << ",\n";
       indent(st, lvl + 1);
-      st << "\"" << e.first << "\": ";
+      st << "\"" << toNum(e.first) << "\": ";
       jsonSer(st, std::move(e.second), lvl + 1);
     }
     st << "\n";
@@ -299,11 +314,18 @@ namespace Internal
     auto fields = j.getFields();
     for (const auto &f : fields)
     {
-      auto key = U{};
-      auto st = std::istringstream{std::string{f}};
-      st >> key;
-      auto tmp = v.emplace(key, T{});
-      jsonDeser(j(f), tmp.first->second);
+      if constexpr (std::is_signed_v<U>)
+      {
+        auto key = std::stoll(std::string{f});
+        auto tmp = v.emplace(key, T{});
+        jsonDeser(j(f), tmp.first->second);
+      }
+      else if (std::is_unsigned_v<U>)
+      {
+        auto key = std::stoull(std::string{f});
+        auto tmp = v.emplace(key, T{});
+        jsonDeser(j(f), tmp.first->second);
+      }
     }
   }
 
@@ -316,11 +338,18 @@ namespace Internal
     auto fields = j.getFields();
     for (const auto &f : fields)
     {
-      auto key = U{};
-      auto st = std::istringstream{std::string{f}};
-      st >> key;
-      auto tmp = v.emplace(key, T{});
-      jsonDeser(j(f), tmp.first->second);
+      if constexpr (std::is_signed_v<U>)
+      {
+        auto key = std::stoll(std::string{f});
+        auto tmp = v.emplace(key, T{});
+        jsonDeser(j(f), tmp.first->second);
+      }
+      else if constexpr (std::is_unsigned_v<U>)
+      {
+        auto key = std::stoull(std::string{f});
+        auto tmp = v.emplace(key, T{});
+        jsonDeser(j(f), tmp.first->second);
+      }
     }
   }
 
