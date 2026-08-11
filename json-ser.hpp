@@ -42,9 +42,13 @@ namespace Internal
 
   auto jsonSerVal(std::ostream &st, const std::string &v, int /*lvl*/) -> void;
 
-  inline auto toNum(auto v)
+  template <typename T>
+  inline auto toNum(T v)
   {
-    return v;
+    if constexpr (std::is_enum_v<T>)
+      return static_cast<int64_t>(v);
+    else
+      return v;
   }
 
   inline auto toNum(char v)
@@ -316,15 +320,30 @@ namespace Internal
     {
       if constexpr (std::is_signed_v<U>)
       {
-        auto key = std::stoll(std::string{f});
+        auto key = static_cast<U>(std::stoll(std::string{f}));
         auto tmp = v.emplace(key, T{});
         jsonDeser(j(f), tmp.first->second);
       }
-      else if (std::is_unsigned_v<U>)
+      else if constexpr (std::is_unsigned_v<U>)
       {
-        auto key = std::stoull(std::string{f});
+        auto key = static_cast<U>(std::stoull(std::string{f}));
         auto tmp = v.emplace(key, T{});
         jsonDeser(j(f), tmp.first->second);
+      }
+      else if constexpr (std::is_enum_v<U>)
+      {
+        if constexpr (std::is_signed_v<std::underlying_type_t<U>>)
+        {
+          auto key = static_cast<U>(std::stoll(std::string{f}));
+          auto tmp = v.emplace(key, T{});
+          jsonDeser(j(f), tmp.first->second);
+        }
+        else if constexpr (std::is_unsigned_v<std::underlying_type_t<U>>)
+        {
+          auto key = static_cast<U>(std::stoull(std::string{f}));
+          auto tmp = v.emplace(key, T{});
+          jsonDeser(j(f), tmp.first->second);
+        }
       }
     }
   }
